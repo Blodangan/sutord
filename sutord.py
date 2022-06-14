@@ -52,7 +52,10 @@ def types_to_emojis(types):
 def join(seq, sep, sep_last):
     return sep.join(seq[:-1]) + sep_last + seq[-1] if len(seq) > 1 else seq[0]
 
-def split(message, limit=2000):
+def split_message(message, limit=2000):
+    # Avoid large emojis with '\u200b' (zero width space)
+    limit -= 1
+
     lines = message.split('\n')
     it = iter(lines)
     current = next(it)
@@ -61,13 +64,13 @@ def split(message, limit=2000):
         if len(current) + len(line) < limit:
             current += f'\n{line}'
         else:
-            yield current
+            yield current + '\u200b'
             current = line
 
-    yield current
+    yield current + '\u200b'
 
 async def send_long_message(channel, message):
-    for msg in split(message):
+    for msg in split_message(message):
         await channel.send(msg)
 
 class Dictionary:
