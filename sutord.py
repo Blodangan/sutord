@@ -6,6 +6,8 @@ from collections import Counter
 from pathlib import Path
 import json
 from unidecode import unidecode
+from larousse_api import larousse
+import unicodedata
 import discord
 
 class LetterType(Enum):
@@ -369,6 +371,7 @@ class Client(discord.Client):
 
         self.sutom_dictionary = Dictionary('dictionary.txt', 'choices.txt')
         self.sutom_stats = Stats('stats')
+        self.sutom_previous_hidden_word = None
 
         self.sutom_message = None
         self.sutom_game = None
@@ -427,6 +430,8 @@ class Client(discord.Client):
 
                 self.sutom_stats.update(self.sutom_game)
                 self.sutom_stats.save()
+
+            self.sutom_previous_hidden_word = self.sutom_game.hidden_word
 
         await self.change_presence()
 
@@ -498,6 +503,17 @@ class Client(discord.Client):
     async def on_sutom_stats_games(self, message):
         await message.channel.send(self.sutom_stats.games_stats.get_emojis(), reference=message)
 
+    async def on_sutom_meaning(self, message):
+        if self.sutom_previous_hidden_word is None:
+            await message.channel.send('Le mot de la partie précédente n\'a pas été sauvegardé.', reference=message)
+        else:
+            definitions = larousse.get_definitions(self.sutom_previous_hidden_word)
+            if not definitions:
+                await message.channel.send('Aucune définition n\'est disponible.', reference=message)
+            else:
+                meanings = unicodedata.normalize('NFC', '\n'.join(definitions))
+                await message.channel.send(f'{self.sutom_previous_hidden_word} :\n{meanings}', reference=message)
+
     async def on_message(self, message):
         if message.author == self.user:
             return
@@ -513,6 +529,8 @@ class Client(discord.Client):
                 await self.on_sutom_stats(message)
             elif content == 'sutom stats games':
                 await self.on_sutom_stats_games(message)
+            elif content == 'sutom meaning':
+                await self.on_sutom_meaning(message)
 
 intents = discord.Intents.default()
 intents.members = True
