@@ -71,9 +71,10 @@ def split_message(message, limit=2000):
 
     yield current + '\u200b'
 
-async def send_long_message(channel, message):
+async def send_long_message(channel, message, reference=None):
     for msg in split_message(message):
-        await channel.send(msg)
+        await channel.send(msg, reference=reference)
+        reference = None
 
 class Dictionary:
     def __init__(self, dictionary, choices):
@@ -512,7 +513,7 @@ class Client(discord.Client):
                 await message.channel.send('Aucune définition n\'est disponible.', reference=message)
             else:
                 meanings = unicodedata.normalize('NFC', '\n'.join(definitions))
-                await message.channel.send(f'{self.sutom_previous_hidden_word} :\n{meanings}', reference=message)
+                await send_long_message(message.channel, f'{self.sutom_previous_hidden_word} :\n{meanings}', reference=message)
 
     async def on_message(self, message):
         if message.author == self.user:
