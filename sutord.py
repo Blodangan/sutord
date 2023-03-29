@@ -502,7 +502,7 @@ class Client(discord.Client):
         await message.channel.send(self.sutom_stats.get_player_stats_emojis(message.author), reference=message)
 
     async def on_sutom_stats_games(self, message):
-        await message.channel.send(self.sutom_stats.games_stats.get_emojis(), reference=message)
+        await send_long_message(message.channel, self.sutom_stats.games_stats.get_emojis(), reference=message)
 
     async def on_sutom_meaning(self, message):
         if self.sutom_previous_hidden_word is None:
