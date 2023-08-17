@@ -54,25 +54,25 @@ def types_to_emojis(types):
 def join(seq, sep, sep_last):
     return sep.join(seq[:-1]) + sep_last + seq[-1] if len(seq) > 1 else seq[0]
 
-def split_message(message, limit=2000):
+def split_message(message, sep, limit=2000):
     # Avoid large emojis with '\u200b' (zero width space)
     limit -= 1
 
-    lines = message.split('\n')
+    lines = message.split(sep)
     it = iter(lines)
     current = next(it)
 
     for line in it:
         if len(current) + len(line) < limit:
-            current += f'\n{line}'
+            current += f'{sep}{line}'
         else:
             yield current + '\u200b'
             current = line
 
     yield current + '\u200b'
 
-async def send_long_message(channel, message, reference=None):
-    for msg in split_message(message):
+async def send_long_message(channel, message, sep='\n', reference=None):
+    for msg in split_message(message, sep):
         await channel.send(msg, reference=reference)
         reference = None
 
@@ -502,7 +502,7 @@ class Client(discord.Client):
         await message.channel.send(self.sutom_stats.get_player_stats_emojis(message.author), reference=message)
 
     async def on_sutom_stats_games(self, message):
-        await send_long_message(message.channel, self.sutom_stats.games_stats.get_emojis(), reference=message)
+        await send_long_message(message.channel, self.sutom_stats.games_stats.get_emojis(), ',', reference=message)
 
     async def on_sutom_meaning(self, message):
         if self.sutom_previous_hidden_word is None:
