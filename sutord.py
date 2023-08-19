@@ -379,7 +379,7 @@ class Client(discord.Client):
 
     async def on_sutom(self, message):
         if self.sutom_message:
-            await message.channel.send('Une partie est déjà en cours.', reference=message)
+            await message.channel.send(f'Une partie est déjà en cours : {self.sutom_message.jump_url}', reference=message)
             return
 
         self.sutom_message = message
