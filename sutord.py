@@ -307,7 +307,7 @@ class GamesStats:
         mean_num_players = self.num_players / num_games
 
         repeated_hidden_words = [f'{word} ({num})' for word, num in self.hidden_words.most_common(20)]
-        repeated_hidden_words_emojis = join(repeated_hidden_words, ', ', ' et ') if repeated_hidden_words else 'aucun !'
+        repeated_hidden_words_emojis = join(repeated_hidden_words, ', ', ' et ')
 
         return (f'Un total de {num_games} parties ont été jouées.\n'
                 f'Le nombre moyen de joueurs par partie est de {mean_num_players:.2f}.\n'
