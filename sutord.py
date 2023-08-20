@@ -76,6 +76,12 @@ async def send_long_message(channel, message, sep='\n', reference=None):
         await channel.send(msg, reference=reference)
         reference = None
 
+class Command:
+    def __init__(self, name, callback, help):
+        self.name = name
+        self.callback = callback
+        self.help = help
+
 class Dictionary:
     def __init__(self, dictionary, choices):
         self.dictionary = self.load(dictionary, set)
@@ -370,6 +376,14 @@ class Client(discord.Client):
     def __init__(self, intents):
         super().__init__(intents=intents)
 
+        self.commands = [
+            Command('sutom', self.on_sutom, 'créer une partie'),
+            Command('sutom stats', self.on_sutom_stats, 'afficher vos statistiques'),
+            Command('sutom stats games', self.on_sutom_stats_games, 'afficher les statistiques globales'),
+            Command('sutom meaning', self.on_sutom_meaning, 'afficher la définition du mot de la dernière partie'),
+            Command('sutom help', self.on_sutom_help, 'afficher cette aide')
+            ]
+
         self.sutom_dictionary = Dictionary('dictionary.txt', 'choices.txt')
         self.sutom_stats = Stats('stats')
         self.sutom_previous_hidden_word = None
@@ -515,6 +529,10 @@ class Client(discord.Client):
                 meanings = unicodedata.normalize('NFC', '\n'.join(definitions))
                 await send_long_message(message.channel, f'{self.sutom_previous_hidden_word} :\n{meanings}', reference=message)
 
+    async def on_sutom_help(self, message):
+        help = '\n'.join(f'* `{command.name}` : {command.help}' for command in self.commands)
+        await message.channel.send(help, reference=message)
+
     async def on_message(self, message):
         if message.author == self.user:
             return
@@ -524,14 +542,9 @@ class Client(discord.Client):
         if isinstance(message.channel, discord.DMChannel):
             await self.on_sutom_answer(message)
         else:
-            if content == 'sutom':
-                await self.on_sutom(message)
-            elif content == 'sutom stats':
-                await self.on_sutom_stats(message)
-            elif content == 'sutom stats games':
-                await self.on_sutom_stats_games(message)
-            elif content == 'sutom meaning':
-                await self.on_sutom_meaning(message)
+            for command in self.commands:
+                if command.name == content:
+                    await command.callback(message)
 
 intents = discord.Intents.default()
 intents.members = True
